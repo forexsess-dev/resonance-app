@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>proxyzona VPN</title>
+    <!-- Подключение Telegram Web App API -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Подключение хакерского шрифта JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Подключение иконок FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* CSS Переменные для черно-белой палитры и эффектов свечения */
+        :root {
+            --bg-color: #000000;
+            --card-bg: #0a0a0a;
+            --accent-color: #ffffff;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --border-color: rgba(255, 255, 255, 0.2);
+            --glow: 0 0 15px rgba(255, 255, 255, 0.3);
+            --glow-strong: 0 0 25px rgba(255, 255, 255, 0.6);
+            --glow-text: 0 0 8px rgba(255, 255, 255, 0.8);
+        }
+        
+        /* Сброс базовых стилей */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'JetBrains Mono', monospace;
+            -webkit-tap-highlight-color: transparent;
+            text-transform: lowercase !important;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Верхний бар */
+        .global-header {
+            padding-bottom: 20px;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+        }
+
+        /* Основной контейнер приложения */
+        .app-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 20px 80px 20px;
+        }
+
+        /* Стили для экранов (SPA логика) */
+        .screen {
+            display: none;
+            animation: glitchFadeIn 0.3s ease;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes glitchFadeIn {
+            0% { opacity: 0; transform: scale(0.98); filter: blur(2px); }
+            50% { opacity: 0.5; filter: blur(1px); }
+            100% { opacity: 1; transform: scale(1); filter: blur(0); }
+        }
+
+        /* Типографика */
+        h1, h2, h3 {
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+        }
+
+        .text-muted {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* Карточки */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px; /* Более угловатые формы для хакерского стиля */
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            transition: box-shadow 0.3s ease, border-color 0.3s ease;
+            position: relative;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 2px;
+            background: var(--accent-color);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            box-shadow: var(--glow);
+        }
+
+        .card:hover {
+            box-shadow: var(--glow);
+            border-color: var(--accent-color);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        /* Поля ввода и кнопки */
+        .input-group {
+            display: flex;
+            background: transparent;
+            border-radius: 4px;
+            padding: 5px;
+            margin-top: 10px;
+            border: 1px solid var(--border-color);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .input-group:focus-within {
+            border-color: var(--accent-color);
+            box-shadow: var(--glow);
+        }
+
+        .input-group input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            padding: 10px 15px;
+            font-size: 13px;
+            outline: none;
+            text-overflow: ellipsis;
+            text-transform: none !important;
+        }
+
+        .btn-icon {
+            background: transparent;
+            color: var(--accent-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            background: var(--accent-color);
+            color: var(--bg-color);
+            box-shadow: var(--glow);
+        }
+
+        .btn-icon:active {
+            transform: scale(0.95);
+        }
+
+        .btn-primary {
+            background: transparent;
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+            border-radius: 4px;
+            padding: 15px;
+            width: 100%;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-color);
+            color: var(--bg-color);
+            box-shadow: var(--glow-strong);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        /* Нижнее навигационное меню (Tab Bar) */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 10px;
+            border-top: 1px solid var(--border-color);
+            z-index: 100;
+            padding-bottom: calc(15px + env(safe-area-inset-bottom));
+        }
+
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 11px;
+            text-transform: uppercase;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 25%;
+        }
+
+        .tab-item i {
+            font-size: 18px;
+            transition: transform 0.2s, text-shadow 0.2s;
+        }
+
+        .tab-item.active {
+            color: var(--accent-color);
+            text-shadow: var(--glow-text);
+        }
+        
+        .tab-item.active i {
+            transform: translateY(-2px);
+        }
+
+        /* Специфичные компоненты */
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: var(--glow-text);
+        }
+
+        .header-logo i {
+            color: var(--accent-color);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .status-active {
+            background: transparent;
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+            box-shadow: var(--glow);
+        }
+
+        .status-inactive {
+            background: rgba(255, 68, 68, 0.1);
+            color: #ff4444;
+            border: 1px solid rgba(255, 68, 68, 0.3);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .progress-container {
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0px;
+            overflow: hidden;
+            margin-top: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-color);
+            width: 15%;
+            box-shadow: var(--glow);
+            transition: width 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .progress-fill.danger {
+            background: #ff4444;
+            box-shadow: 0 0 15px rgba(255, 68, 68, 0.6);
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            text-transform: uppercase;
+        }
+
+        /* Сетка тарифов */
+        .tariff-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .tariff-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tariff-card.popular {
+            border-color: var(--accent-color);
+            box-shadow: var(--glow);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--accent-color);
+            color: var(--bg-color);
+            font-size: 10px;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-bottom-left-radius: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .tariff-price {
+            font-size: 26px;
+            font-weight: 800;
+            margin: 10px 0;
+            text-shadow: var(--glow-text);
+        }
+
+        .tariff-features {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .tariff-features li {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tariff-features li i {
+            color: var(--accent-color);
+            font-size: 12px;
+            text-shadow: var(--glow-text);
+        }
+
+        /* Ссылки в профиле */
+        .profile-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin-bottom: 10px;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: all 0.2s;
+        }
+
+        .profile-link:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--accent-color);
+            box-shadow: var(--glow);
+        }
+
+        .profile-link-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 13px;
+            text-transform: uppercase;
+        }
+
+        .profile-link-left i {
+            color: var(--accent-color);
+            font-size: 16px;
+            width: 24px;
+            text-align: center;
+            text-shadow: var(--glow-text);
+        }
+
+        /* Всплывающее уведомление (Toast) */
+        .toast {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--bg-color);
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: var(--glow-strong);
+            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Эффект мерцания курсора как в терминале */
+        .cursor-blink {
+            display: inline-block;
+            width: 8px;
+            height: 18px;
+            background-color: var(--accent-color);
+            vertical-align: middle;
+            margin-left: 5px;
+            animation: blink 1s step-end infinite;
+            box-shadow: var(--glow);
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Свитчер периодов */
+        .period-switcher {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 4px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+        .period-option {
+            flex: 1;
+            text-align: center;
+            padding: 8px 0;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        .period-option.active {
+            background: var(--accent-color);
+            color: var(--bg-color);
+            box-shadow: var(--glow);
+        }
+
+        /* Модальные окна */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-color);
+            z-index: 2000;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 80px;
+            animation: glitchFadeIn 0.3s ease;
+        }
+        .modal.active {
+            display: block;
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-top: 10px;
+        }
+        .modal-header h3 {
+            margin-bottom: 0;
+        }
+        .modal-content {
+            color: var(--text-muted);
+            font-size: 12px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        .modal-content h4 {
+            color: var(--text-main);
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Уведомление -->
+    <div id="toast" class="toast">скопировано!</div>
+
+    <div class="app-container">
+        
+        <!-- Верхний бар -->
+        <div class="global-header">
+            <span>protect by proxyzona</span>
+        </div>
+
+        <!-- ЭКРАН: ГЛАВНАЯ -->
+        <div id="screen-main" class="screen active">
+            <div class="header-logo">
+                <i class="fa-solid fa-terminal"></i>
+                <span>proxyzona<span class="cursor-blink"></span></span>
+            </div>
+
+            <div class="card">
+                <h3>статус подписки</h3>
+                <div class="status-badge status-active" id="sub-status-badge">активна</div>
+                <p class="text-muted" id="sub-progress-text">использовано: 27 / 30 дней</p>
+                
+                <div class="progress-container" id="sub-progress-container">
+                    <div class="progress-bar">
+                        <!-- Если остается 3 дня и меньше (использовано >= 27 из 30), добавляем класс danger -->
+                        <div class="progress-fill danger" id="sub-progress-fill" style="width: 90%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="quick-connect-card">
+                <h3>быстрое подключение</h3>
+                <p class="text-muted">скопируйте ключ и вставьте в приложение hiddify</p>
+                <div class="input-group">
+                    <input type="text" id="access-key" value="vless://d3b8...proxyzona.net:443" readonly>
+                    <button class="btn-icon" onclick="copyToClipboard('access-key')">
+                        <i class="fa-regular fa-copy"></i>
+                    </button>
+                </div>
+                <a href="#" id="instruction-link" target="_blank" class="profile-link" style="margin-top: 15px; margin-bottom: 0;">
+                    <div class="profile-link-left">
+                        <i class="fa-solid fa-book"></i>
+                        <span>инструкция по подключению</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-muted"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- ЭКРАН: СОГЛАШЕНИЯ -->
+        <div id="screen-agreements" class="screen">
+            <h2>соглашения</h2>
+            <p class="text-muted" style="margin-bottom: 20px;">юридическая информация и правила использования сервиса</p>
+
+            <a href="#" onclick="showModal('privacy')" class="profile-link">
+                <div class="profile-link-left">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>политика конфиденциальности</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-muted"></i>
+            </a>
+
+            <a href="#" onclick="showModal('terms')" class="profile-link">
+                <div class="profile-link-left">
+                    <i class="fa-solid fa-file-signature"></i>
+                    <span>пользовательское соглашение</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-muted"></i>
+            </a>
+        </div>
+
+        <!-- ЭКРАН: ПОДПИСКА -->
+        <div id="screen-subscription" class="screen">
+            <h2>управление подпиской</h2>
+            <p class="text-muted" style="margin-bottom: 20px;">выберите подходящий тарифный план</p>
+
+            <div class="card" id="purchase-card">
+                <h3>покупка подписки</h3>
+                <div class="period-switcher">
+                    <div class="period-option active" onclick="selectPeriod(1, 150, 'buy_plan_1month', this)">1 мес</div>
+                    <div class="period-option" onclick="selectPeriod(3, 400, 'buy_plan_3months', this)">3 мес</div>
+                    <div class="period-option" onclick="selectPeriod(6, 750, 'buy_plan_6months', this)">6 мес</div>
+                    <div class="period-option" onclick="selectPeriod(12, 1200, 'buy_plan_1year', this)">1 год</div>
+                </div>
+                <div class="tariff-price" id="selected-price">150 ₽</div>
+                <ul class="tariff-features">
+                    <li><i class="fa-solid fa-check"></i> безлимитный трафик</li>
+                    <li><i class="fa-solid fa-check"></i> современные протоколы vless(reality) // hysteria2</li>
+                    <li><i class="fa-solid fa-check"></i> безлимитное количество устройств</li>
+                </ul>
+                <button class="btn-primary" id="buy-btn" onclick="buyPlan('buy_plan_1month')">купить</button>
+            </div>
+        </div>
+
+        <!-- ЭКРАН: ПРОФИЛЬ -->
+        <div id="screen-profile" class="screen">
+            <div style="text-align: center; margin-bottom: 30px; margin-top: 20px;">
+                <div style="width: 80px; height: 80px; background: transparent; border-radius: 4px; margin: 0 auto 15px auto; display: flex; align-items: center; justify-content: center; font-size: 32px; color: var(--accent-color); border: 2px solid var(--accent-color); box-shadow: var(--glow);">
+                    <i class="fa-solid fa-user-astronaut"></i>
+                </div>
+                <h2 id="user-name" style="text-shadow: var(--glow-text);">user_unknown</h2>
+                <p class="text-muted" id="user-id">id: 000000000</p>
+            </div>
+
+            <div class="profile-links">
+                <a href="https://t.me/proxyzona_support" target="_blank" class="profile-link">
+                    <div class="profile-link-left">
+                        <i class="fa-solid fa-headset"></i>
+                        <span>техническая поддержка</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-muted"></i>
+                </a>
+                <a href="https://t.me/proxyzona_news" target="_blank" class="profile-link">
+                    <div class="profile-link-left">
+                        <i class="fa-solid fa-bullhorn"></i>
+                        <span>канал новостей</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-muted"></i>
+                </a>
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">реферальная система</h3>
+            <p class="text-muted" style="margin-bottom: 20px;">получай 20% с каждой оплаты приглашенного друга навсегда.</p>
+
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div class="text-muted">приглашено</div>
+                    <div style="font-size: 24px; font-weight: 800; text-shadow: var(--glow-text);">12</div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="text-muted">заработано</div>
+                    <div style="font-size: 24px; font-weight: 800; color: var(--accent-color); text-shadow: var(--glow-text);">1450 ₽</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>твоя ссылка</h3>
+                <div class="input-group">
+                    <input type="text" id="ref-link" value="https://t.me/proxyzona_bot?start=ref12345" readonly>
+                    <button class="btn-icon" onclick="copyToClipboard('ref-link')">
+                        <i class="fa-regular fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <p class="text-muted" style="font-size: 11px; text-transform: lowercase;">proxyzona v1.0.0 // secure connection</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- МОДАЛЬНЫЕ ОКНА -->
+    <div id="modal-privacy" class="modal">
+        <div class="modal-header">
+            <button class="btn-icon" onclick="closeModal('privacy')"><i class="fa-solid fa-arrow-left"></i></button>
+            <h3>политика конфиденциальности</h3>
+        </div>
+        <div class="modal-content">🛡 Политика конфиденциальности
+Настоящая Политика конфиденциальности (далее — Политика) регулирует порядок сбора, использования и разглашения Администрацией proxyzona информации о Пользователе, которая может быть признана конфиденциальной или является таковой в соответствии с законодательством РФ.
+
+Термины, используемые в настоящей Политике, если не указано иное, применяются на условиях и в значении, определённом Пользовательским соглашением.
+
+Факт использования Пользователем telegram-бота proxyzona, а также приобретение услуг сервиса являются полным и безоговорочным акцептом настоящей Политики. Незнание указанных соглашений не освобождает Пользователя от ответственности за несоблюдение их условий.
+Если Пользователь не согласен с условиями настоящей Политики или не имеет права на ее акцепт, Пользователю следует незамедлительно прекратить любое использование telegram-бота proxyzona.
+
+<h4>1. Источники информации</h4>1.1. Информация, о которой идёт речь в настоящем соглашении, может быть персонифицированной (прямо относящейся к конкретному лицу или ассоциируемой с ним) и не персонифицированной (данные о Пользователе telegram-бота proxyzona, полученные без привязки к конкретному лицу).
+1.2. Администрации доступна информация, получаемая следующими способами:
+- информация, полученная при переписке Администрации с Пользователями telegram-бота proxyzona посредством обратной связи;
+- техническая информация — данные об интернет-провайдере Пользователя, IP-адресе Пользователя, характеристиках используемого устройства и программного обеспечения;
+- статистические данные об использовании VPN-сервиса (объем потребляемого трафика) для обеспечения корректной работы лимитов по тарифам.
+1.3. Конфиденциальной, согласно настоящему Соглашению, может быть признана лишь информация, хранящаяся в базе данных telegram-бота proxyzona в зашифрованном виде и доступная для просмотра исключительно Администрации.
+1.4. Информация о лице, добровольно размещённая им в общих разделах telegram-бота proxyzona (например, в публичных чатах поддержки) и доступная любому другому пользователю, не является конфиденциальной.
+
+<h4>2. Безопасность</h4>2.1. Администрация telegram-бота proxyzona использует современные технологии обеспечения конфиденциальности пользовательских данных с целью обеспечения максимальной защиты информации. Мы не ведем логирование (no-logs policy) истории посещений веб-сайтов нашими Пользователями.
+2.2. Доступ к личной информации Пользователя и его VPN-конфигурациям осуществляется через систему уникальных ссылок и авторизацию в Telegram. Пользователь обязуется самостоятельно обеспечить сохранность данных авторизации и своих ключей доступа (конфигов) и ни под каким предлогом не передавать их третьим лицам.
+2.3. Сбор, хранение, использование, обработка и разглашение информации, полученной Администрацией telegram-бота proxyzona, осуществляется строго в соответствии с законодательством РФ.
+2.4. Пользователь осознаёт и предоставляет согласие на сбор и обработку своих минимальных технических данных Администрацией telegram-бота proxyzona исключительно в рамках и с целью предоставления VPN-услуг.
+
+<h4>3. Заключительные положения</h4>3.1. Пользователь, заинтересованный в услугах сервиса, оформляет заказ через интерфейс telegram-бота proxyzona. При оформлении заказа Пользователь выбирает необходимый тарифный план, определяющий срок действия подписки, лимиты трафика, доступные протоколы и количество одновременно подключаемых устройств.
+3.2. Деятельность Администрации telegram-бота proxyzona осуществляется в соответствии с законодательством РФ. Любые претензии, споры, официальные обращения будут рассматриваться исключительно в порядке, предусмотренном законодательством РФ.
+3.3. Администрация telegram-бота proxyzona не несёт ответственности за любые прямые или косвенные убытки, понесённые Пользователями или третьими сторонами, а также за упущенную выгоду при использовании, невозможности использования или результатов использования telegram-бота proxyzona.
+3.4. Условия настоящей Политики конфиденциальности могут быть изменены Администрацией telegram-бота proxyzona в одностороннем порядке. Актуальная версия всегда доступна в интерфейсе Бота.</div>
+    </div>
+
+    <div id="modal-terms" class="modal">
+        <div class="modal-header">
+            <button class="btn-icon" onclick="closeModal('terms')"><i class="fa-solid fa-arrow-left"></i></button>
+            <h3>пользовательское соглашение</h3>
+        </div>
+        <div class="modal-content">📄 Пользовательское соглашение
+Настоящее Пользовательское соглашение (далее — «Соглашение») является публичной офертой и определяет условия использования Telegram-бота proxyzona (далее — «Бот»), размещённого в мессенджере Telegram, между Администрацией Бота (далее — «Администрация») и Пользователем (далее — «Пользователь»).
+
+<h4>1. Предмет соглашения</h4>1.1. Администрация предоставляет Пользователю доступ к Боту и его функционалу на условиях, изложенных в настоящем Соглашении.
+1.2. Пользователь, используя Бот, подтверждает своё полное и безоговорочное согласие с условиями настоящего Соглашения.
+1.3. Настоящее Соглашение является юридически обязательным документом.
+
+<h4>2. Описание Бота и его функциональности</h4>2.1. Бот proxyzona предназначен для обеспечения безопасного доступа к сети Интернет и обхода сетевых ограничений (VPN-сервис).
+2.2. Перечень функций и возможностей Бота может быть изменён Администрацией без предварительного уведомления Пользователя.
+
+<h4>3. Правила использования Бота</h4>3.1. Пользователь обязуется использовать Бот исключительно в соответствии с его целевым назначением и в рамках действующего законодательства.
+3.2. Пользователь не имеет права:
+- Пытаться получить несанкционированный доступ к информации, содержащейся в Боте.
+- Использовать Бот для распространения вредоносного программного обеспечения, спама или другой незаконной информации.
+- Вмешиваться в работу Бота, изменять его код или функциональность.
+- Нарушать права третьих лиц при использовании Бота.
+3.3. Администрация оставляет за собой право ограничить или прекратить доступ Пользователя к Боту в случае нарушения им условий настоящего Соглашения.
+
+<h4>4. Ответственность сторон</h4>4.1. Администрация не несёт ответственности за убытки, причинённые Пользователю в результате использования Бота, в том числе за возможные ошибки в работе Бота, перерывы в работе, потерю данных и т.д.
+4.2. Пользователь несёт полную ответственность за свои действия при использовании Бота, а также за последствия таких действий.
+4.3. Администрация не несёт ответственности за содержание информации, передаваемой или получаемой Пользователем при использовании VPN-сервиса.
+
+<h4>5. Обработка персональных данных</h4>5.1. Администрация обязуется соблюдать конфиденциальность персональных данных Пользователя, полученных в процессе использования Бота.
+5.2. Подробная информация об обработке персональных данных содержится в Политике конфиденциальности, являющейся неотъемлемой частью настоящего Соглашения.
+
+<h4>6. Срок действия и порядок изменения Соглашения</h4>6.1. Настоящее Соглашение вступает в силу с момента его принятия Пользователем и действует бессрочно.
+6.2. Администрация оставляет за собой право вносить изменения в настоящее Соглашение. Информация об изменениях будет размещена в Боте. Пользователь считается принявшим изменения, если он продолжает использовать Бот после внесения изменений.
+
+<h4>7. Разрешение споров</h4>7.1. Все споры, возникающие между Администрацией и Пользователем в связи с настоящим Соглашением, подлежат разрешению в порядке, предусмотренном действующим законодательством.
+
+<h4>8. Прочие условия</h4>8.1. Во всём остальном, что не предусмотрено настоящим Соглашением, стороны руководствуются действующим законодательством.
+8.2. Если какое-либо положение настоящего Соглашения будет признано недействительным, это не повлияет на действительность остальных положений.</div>
+    </div>
+
+    <!-- НИЖНЕЕ МЕНЮ (TAB BAR) -->
+    <div class="tab-bar">
+        <div class="tab-item active" onclick="switchTab('main', this)">
+            <i class="fa-solid fa-terminal"></i>
+            <span>главная</span>
+        </div>
+        <div class="tab-item" onclick="switchTab('agreements', this)">
+            <i class="fa-solid fa-file-contract"></i>
+            <span>соглашения</span>
+        </div>
+        <div class="tab-item" onclick="switchTab('subscription', this)">
+            <i class="fa-solid fa-star"></i>
+            <span>подписка</span>
+        </div>
+        <div class="tab-item" onclick="switchTab('profile', this)">
+            <i class="fa-solid fa-user-shield"></i>
+            <span>профиль</span>
+        </div>
+    </div>
+
+    <!-- ЛОГИКА ПРИЛОЖЕНИЯ -->
+    <script>
+        // Инициализация Telegram Web App
+        const tg = window.Telegram.WebApp;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // Сообщаем Telegram, что приложение готово
+            tg.ready();
+            // Разворачиваем на весь экран
+            tg.expand();
+            
+            // Устанавливаем цвета темы под дизайн
+            tg.setHeaderColor('#000000');
+            tg.setBackgroundColor('#000000');
+
+            // Получаем данные пользователя из Telegram
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                // Формируем имя
+                const fullName = user.first_name + (user.last_name ? ' ' + user.last_name : '');
+                document.getElementById('user-name').textContent = fullName.toLowerCase();
+                document.getElementById('user-id').textContent = 'id: ' + user.id;
+            }
+
+            // --- Чтение URL параметров ---
+            const urlParams = new URLSearchParams(window.location.search);
+            const status = urlParams.get('status') || 'inactive';
+            const days = parseInt(urlParams.get('days')) || 0;
+            const totalDays = parseInt(urlParams.get('total_days')) || 30;
+            const key = urlParams.get('key') || '';
+
+            // --- Элементы DOM ---
+            const statusBadge = document.getElementById('sub-status-badge');
+            const progressText = document.getElementById('sub-progress-text');
+            const progressContainer = document.getElementById('sub-progress-container');
+            const progressFill = document.getElementById('sub-progress-fill');
+            const quickConnectCard = document.getElementById('quick-connect-card');
+            const accessKeyInput = document.getElementById('access-key');
+            const buyBtn = document.getElementById('buy-btn');
+            const instructionLink = document.getElementById('instruction-link');
+
+            if (status === 'active') {
+                // Статус активен
+                if (statusBadge) {
+                    statusBadge.textContent = 'активна';
+                    statusBadge.classList.add('status-active');
+                    statusBadge.classList.remove('status-inactive');
+                }
+                
+                // Прогресс-бар
+                if (progressContainer) progressContainer.classList.remove('hidden');
+                if (progressText) {
+                    progressText.classList.remove('hidden');
+                    progressText.textContent = `использовано: ${days} / ${totalDays} дней`;
+                }
+                
+                if (progressFill) {
+                    const percentage = Math.min((days / totalDays) * 100, 100);
+                    progressFill.style.width = `${percentage}%`;
+                    
+                    // Если осталось 3 дня и меньше
+                    if ((totalDays - days) <= 3) {
+                        progressFill.classList.add('danger');
+                    } else {
+                        progressFill.classList.remove('danger');
+                    }
+                }
+
+                // Быстрое подключение
+                if (quickConnectCard) quickConnectCard.classList.remove('hidden');
+                if (accessKeyInput) accessKeyInput.value = key;
+                if (instructionLink && key) {
+                    instructionLink.href = 'https://telegra.ph/proxyzona-instruction-01-01?key=' + encodeURIComponent(key);
+                }
+
+                // Кнопка подписки
+                if (buyBtn) buyBtn.textContent = 'продлить';
+
+            } else {
+                // Статус неактивен
+                if (statusBadge) {
+                    statusBadge.textContent = 'неактивна';
+                    statusBadge.classList.remove('status-active');
+                    statusBadge.classList.add('status-inactive');
+                }
+
+                // Скрываем прогресс-бар и текст
+                if (progressContainer) progressContainer.classList.add('hidden');
+                if (progressText) progressText.classList.add('hidden');
+
+                // Скрываем быстрое подключение
+                if (quickConnectCard) quickConnectCard.classList.add('hidden');
+
+                // Кнопка подписки
+                if (buyBtn) buyBtn.textContent = 'купить';
+            }
+        });
+
+        // Функция переключения вкладок (SPA логика)
+        function switchTab(tabId, element) {
+            // Скрываем все экраны
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            // Убираем активный класс у всех табов
+            document.querySelectorAll('.tab-item').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Показываем нужный экран и активируем таб
+            document.getElementById('screen-' + tabId).classList.add('active');
+            element.classList.add('active');
+            
+            // Легкая вибрация при переключении табов (Haptic Feedback)
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.selectionChanged();
+            }
+        }
+
+        // Функция копирования текста в буфер обмена
+        function copyToClipboard(inputId) {
+            const input = document.getElementById(inputId);
+            
+            // Выделяем текст
+            input.select();
+            input.setSelectionRange(0, 99999); // Для мобильных устройств
+            
+            // Копируем через Clipboard API
+            navigator.clipboard.writeText(input.value).then(() => {
+                showToast('скопировано!');
+                // Уведомление об успешном действии (Haptic Feedback)
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('success');
+                }
+            }).catch(err => {
+                console.error('Ошибка копирования: ', err);
+                // Fallback для старых браузеров
+                document.execCommand('copy');
+                showToast('скопировано!');
+            });
+        }
+
+        // Функция показа всплывающего уведомления (Toast)
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            // Скрываем через 2 секунды
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        // Функция покупки тарифа (отправка данных боту)
+        function buyPlan(planId) {
+            // Вибрация при нажатии на кнопку покупки
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+            
+            // Отправляем данные обратно боту для обработки платежа
+            // Бот получит эти данные в событии web_app_data
+            tg.sendData(planId);
+        }
+
+        // Выбор периода подписки
+        function selectPeriod(months, price, planId, element) {
+            // Обновляем активный класс
+            const options = element.parentElement.querySelectorAll('.period-option');
+            options.forEach(opt => opt.classList.remove('active'));
+            element.classList.add('active');
+
+            // Обновляем цену
+            document.getElementById('selected-price').textContent = price + ' ₽';
+
+            // Обновляем ID плана на кнопке
+            document.getElementById('buy-btn').setAttribute('onclick', `buyPlan('${planId}')`);
+
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.selectionChanged();
+            }
+        }
+
+        // Показ модального окна
+        function showModal(id) {
+            document.getElementById('modal-' + id).classList.add('active');
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        }
+
+        // Скрытие модального окна
+        function closeModal(id) {
+            document.getElementById('modal-' + id).classList.remove('active');
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        }
+    </script>
+</body>
+</html>
