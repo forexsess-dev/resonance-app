@@ -650,23 +650,23 @@
             </div>
 
             <h3 style="margin-top: 30px; margin-bottom: 15px;">реферальная система</h3>
-            <p class="text-muted" style="margin-bottom: 20px;">получай 20% с каждой оплаты приглашенного друга навсегда.</p>
+            <p class="text-muted" style="margin-bottom: 20px;">получай 50 ₽ с первой оплаты каждого приглашенного друга.</p>
 
             <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <div class="text-muted">приглашено</div>
-                    <div style="font-size: 24px; font-weight: 800; text-shadow: var(--glow-text);">12</div>
+                    <div id="ref-count-display" style="font-size: 24px; font-weight: 800; text-shadow: var(--glow-text);">0</div>
                 </div>
                 <div style="text-align: right;">
                     <div class="text-muted">заработано</div>
-                    <div style="font-size: 24px; font-weight: 800; color: var(--accent-color); text-shadow: var(--glow-text);">1450 ₽</div>
+                    <div id="ref-earned-display" style="font-size: 24px; font-weight: 800; color: var(--accent-color); text-shadow: var(--glow-text);">0 ₽</div>
                 </div>
             </div>
 
             <div class="card">
                 <h3>твоя ссылка</h3>
                 <div class="input-group">
-                    <input type="text" id="ref-link" value="https://t.me/proxyzona_bot?start=ref12345" readonly>
+                    <input type="text" id="ref-link" value="" readonly>
                     <button class="btn-icon" onclick="copyToClipboard('ref-link')">
                         <i class="fa-regular fa-copy"></i>
                     </button>
@@ -802,6 +802,9 @@
             const days = parseInt(urlParams.get('days')) || 0;
             const totalDays = parseInt(urlParams.get('total_days')) || 30;
             const key = urlParams.get('key') || '';
+            const refCount = parseInt(urlParams.get('ref_count')) || 0;
+            const refEarned = parseInt(urlParams.get('ref_earned')) || 0;
+            const refLink = urlParams.get('ref_link') || '';
 
             // --- Элементы DOM ---
             const statusBadge = document.getElementById('sub-status-badge');
@@ -812,6 +815,17 @@
             const accessKeyInput = document.getElementById('access-key');
             const buyBtn = document.getElementById('buy-btn');
             const instructionLink = document.getElementById('instruction-link');
+            
+            // Элементы реферальной системы
+            const refCountDisplay = document.getElementById('ref-count-display');
+            const refEarnedDisplay = document.getElementById('ref-earned-display');
+            const refLinkInput = document.getElementById('ref-link');
+
+            // --- Применение параметров ---
+            // Реферальная система
+            if (refCountDisplay) refCountDisplay.textContent = refCount;
+            if (refEarnedDisplay) refEarnedDisplay.textContent = refEarned + ' ₽';
+            if (refLinkInput && refLink) refLinkInput.value = refLink;
 
             if (status === 'active') {
                 // Статус активен
