@@ -926,13 +926,13 @@
             }, 2000);
         }
 
-        // Функция покупки тарифа (отправка данных боту)
+// Функция покупки тарифа (отправка данных боту через Deep Link)
         function buyPlan(planId) {
-            // Вибрация при нажатии на кнопку покупки
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('medium');
             }
-            tg.sendData(planId);
+            // Закрываем Mini App и отправляем команду боту
+            tg.openTelegramLink('https://t.me/proxyzonavpn_bot?start=' + planId);
         }
 
         // Выбор периода подписки
