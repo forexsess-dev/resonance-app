@@ -548,12 +548,12 @@
             <div class="card">
                 <h3>статус подписки</h3>
                 <div class="status-badge status-active" id="sub-status-badge">активна</div>
-                <p class="text-muted" id="sub-progress-text">использовано: 27 / 30 дней</p>
+                <p class="text-muted" id="sub-progress-text">осталось: 0 дней</p>
                 
                 <div class="progress-container" id="sub-progress-container">
                     <div class="progress-bar">
                         <!-- Если остается 3 дня и меньше (использовано >= 27 из 30), добавляем класс danger -->
-                        <div class="progress-fill danger" id="sub-progress-fill" style="width: 90%;"></div>
+                        <div class="progress-fill" id="sub-progress-fill" style="width: 90%;"></div>
                     </div>
                 </div>
             </div>
@@ -838,16 +838,23 @@
                     statusBadge.className = 'status-badge status-active';
                 }
                 
-                if (progressContainer) progressContainer.classList.remove('hidden');
-                if (progressText) {
-                    progressText.classList.remove('hidden');
-                    progressText.textContent = `использовано: ${days} / ${totalDays} дней`;
+            if (progressText) {
+                progressText.classList.remove('hidden');
+                progressText.textContent = `осталось: ${days} дней`;
                 }
-                
-                if (progressFill) {
-                    const percentage = Math.min((days / totalDays) * 100, 100);
-                    progressFill.style.width = `${percentage}%`;
-                }
+
+            if (progressFill) {
+                // 1. Считаем процент заполнения
+                const percentage = Math.min((days / totalDays) * 100, 100);
+                progressFill.style.width = `${percentage}%`;
+
+                // 2. Если осталось 3 дня или меньше — красим полоску в красный
+            if (days <= 3) {
+                progressFill.classList.add('danger');
+            } else {
+                progressFill.classList.remove('danger');
+            }
+        }
 
                 if (quickConnectCard) quickConnectCard.classList.remove('hidden');
                 if (accessKeyInput) accessKeyInput.value = key; 
