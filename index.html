@@ -27,6 +27,14 @@
             --danger-border: rgba(255, 68, 68, 0.3);
             --danger-glow: none;
             --disabled-color: rgba(0, 0, 0, 0.2);
+            --success-color: #00ff00;
+            --success-bg: rgba(0, 255, 0, 0.1);
+            --success-border: rgba(0, 255, 0, 0.3);
+            --success-glow: none;
+            --hit-color: #b000ff; /* Фиолетовый для ХИТа */
+            --hit-bg: rgba(176, 0, 255, 0.1);
+            --hit-border: rgba(176, 0, 255, 0.3);
+            --hit-glow: none;
         }
         
         /* CSS Переменные для Темной темы */
@@ -47,6 +55,8 @@
             --danger-border: rgba(255, 68, 68, 0.3);
             --danger-glow: 0 0 15px rgba(255, 68, 68, 0.6);
             --disabled-color: rgba(255, 255, 255, 0.2);
+            --success-glow: 0 0 15px rgba(0, 255, 0, 0.6);
+            --hit-glow: 0 0 15px rgba(176, 0, 255, 0.6);
         }
         
         /* Сброс базовых стилей */
@@ -321,6 +331,7 @@
             text-shadow: var(--glow-text);
         }
 
+        /* Стили для бейджей (статус и скидки) */
         .status-badge {
             display: inline-block;
             padding: 4px 10px;
@@ -343,6 +354,38 @@
             background: var(--danger-bg);
             color: var(--danger-color);
             border: 1px solid var(--danger-border);
+        }
+        
+        .badge-discount {
+            background: var(--success-bg);
+            color: var(--success-color);
+            border: 1px solid var(--success-border);
+            box-shadow: var(--success-glow);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-left: 10px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .badge-hit {
+            background: var(--hit-bg);
+            color: var(--hit-color);
+            border: 1px solid var(--hit-border);
+            box-shadow: var(--hit-glow);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-left: 10px;
+            display: inline-block;
+            vertical-align: middle;
         }
 
         .hidden {
@@ -375,7 +418,7 @@
             box-shadow: var(--danger-glow);
         }
 
-        /* Свитчер периодов и скидки */
+        /* Свитчер периодов */
         .period-switcher {
             display: flex;
             background: var(--overlay-bg);
@@ -400,14 +443,6 @@
             color: var(--bg-color);
             box-shadow: var(--glow);
         }
-        .discount-label {
-            color: #00ff00;
-            font-size: 9px;
-            font-weight: 800;
-            display: block;
-            margin-top: -2px;
-            text-shadow: 0 0 5px rgba(0, 255, 0, 0.4);
-        }
 
         /* Калькулятор цены и устройств */
         .price-row {
@@ -419,6 +454,11 @@
             border: 1px solid var(--border-color);
             border-radius: 6px;
             padding: 10px 15px;
+        }
+
+        .price-display-wrapper {
+            display: flex;
+            align-items: center;
         }
 
         .tariff-price {
@@ -691,25 +731,17 @@
                 <h3>покупка подписки</h3>
                 
                 <div class="period-switcher">
-                    <div class="period-option active" onclick="selectPeriod(1, 200, 'buy_plan_1month', this, 2)">
-                        1 мес
-                    </div>
-                    <div class="period-option" onclick="selectPeriod(3, 450, 'buy_plan_3months', this, 4)">
-                        3 мес
-                        <span class="discount-label">-25%</span>
-                    </div>
-                    <div class="period-option" onclick="selectPeriod(6, 800, 'buy_plan_6months', this, 8)">
-                        6 мес
-                        <span class="discount-label">-33%</span>
-                    </div>
-                    <div class="period-option" onclick="selectPeriod(12, 1450, 'buy_plan_1year', this, 10)">
-                        1 год
-                        <span class="discount-label">-40%</span>
-                    </div>
+                    <div class="period-option active" onclick="selectPeriod(1, 200, 'buy_plan_1month', this, 2, 'hit', 'хит')">1 мес</div>
+                    <div class="period-option" onclick="selectPeriod(3, 450, 'buy_plan_3months', this, 4, 'discount', '-25%')">3 мес</div>
+                    <div class="period-option" onclick="selectPeriod(6, 800, 'buy_plan_6months', this, 8, 'discount', '-33%')">6 мес</div>
+                    <div class="period-option" onclick="selectPeriod(12, 1450, 'buy_plan_1year', this, 10, 'discount', '-40%')">1 год</div>
                 </div>
                 
                 <div class="price-row">
-                    <div class="tariff-price" id="selected-price">200 ₽</div>
+                    <div class="price-display-wrapper">
+                        <div class="tariff-price" id="selected-price">200 ₽</div>
+                        <div id="tariff-badge" class="badge-hit">хит</div>
+                    </div>
                     <div class="device-counter">
                         <button id="dev-minus" class="btn-counter" onclick="changeDevices(-1)" disabled><i class="fa-solid fa-minus"></i></button>
                         <span id="dev-count">2 устр.</span>
@@ -878,6 +910,9 @@
     let currentMinDevices = 2;
     let currentDevices = 2;
     let currentPlanId = 'buy_plan_1month';
+    // Новые переменные для отслеживания текущего бейджа
+    let currentBadgeType = 'hit';
+    let currentBadgeText = 'хит';
 
     // Инициализация Telegram Web App
     const tg = window.Telegram.WebApp;
@@ -1016,7 +1051,7 @@
 
     // --- ЛОГИКА КАЛЬКУЛЯТОРА И ПОКУПКИ ---
 
-    function selectPeriod(months, price, planId, element, minDevices) {
+    function selectPeriod(months, price, planId, element, minDevices, badgeType, badgeText) {
         const options = element.parentElement.querySelectorAll('.period-option');
         options.forEach(opt => opt.classList.remove('active'));
         element.classList.add('active');
@@ -1025,6 +1060,8 @@
         currentMinDevices = minDevices;
         currentDevices = minDevices;
         currentPlanId = planId;
+        currentBadgeType = badgeType;
+        currentBadgeText = badgeText;
 
         updateCalculatorUI();
         if (tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
@@ -1046,6 +1083,17 @@
 
         document.getElementById('selected-price').textContent = totalPrice + ' ₽';
         document.getElementById('dev-count').textContent = currentDevices + ' устр.';
+        
+        // Управляем бейджем
+        const badge = document.getElementById('tariff-badge');
+        if(badge) {
+            badge.textContent = currentBadgeText;
+            if(currentBadgeType === 'hit') {
+                badge.className = 'badge-hit';
+            } else {
+                badge.className = 'badge-discount';
+            }
+        }
         
         // Управляем прозрачностью кнопок
         document.getElementById('dev-minus').disabled = (currentDevices <= currentMinDevices);
