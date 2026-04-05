@@ -683,8 +683,8 @@
                 <h3>покупка подписки</h3>
                 
                 <div class="period-switcher">
-                    <div class="period-option active" onclick="selectPeriod(1, 200, 'buy_plan_1month', this, 3)">1 мес</div>
-                    <div class="period-option" onclick="selectPeriod(3, 450, 'buy_plan_3months', this, 5)">3 мес</div>
+                    <div class="period-option active" onclick="selectPeriod(1, 200, 'buy_plan_1month', this, 2)">1 мес</div>
+                    <div class="period-option" onclick="selectPeriod(3, 450, 'buy_plan_3months', this, 4)">3 мес</div>
                     <div class="period-option" onclick="selectPeriod(6, 800, 'buy_plan_6months', this, 8)">6 мес</div>
                     <div class="period-option" onclick="selectPeriod(12, 1450, 'buy_plan_1year', this, 10)">1 год</div>
                 </div>
@@ -693,7 +693,7 @@
                     <div class="tariff-price" id="selected-price">200 ₽</div>
                     <div class="device-counter">
                         <button id="dev-minus" class="btn-counter" onclick="changeDevices(-1)" disabled><i class="fa-solid fa-minus"></i></button>
-                        <span id="dev-count">3 устр.</span>
+                        <span id="dev-count">2 устр.</span>
                         <button id="dev-plus" class="btn-counter" onclick="changeDevices(1)"><i class="fa-solid fa-plus"></i></button>
                     </div>
                 </div>
@@ -703,7 +703,7 @@
                     <li><i class="fa-solid fa-check"></i> современные протоколы vless // hysteria2</li>
                     <li><i class="fa-solid fa-check"></i> 50 ₽ за каждое доп. устройство</li>
                 </ul>
-                <button class="btn-primary" id="buy-btn" onclick="buyPlan('buy_plan_1month_3')">оплатить</button>
+                <button class="btn-primary" id="buy-btn" onclick="buyPlan('buy_plan_1month_2')">оплатить</button>
             </div>
         </div>
 
@@ -854,10 +854,10 @@
     </div>
 
 <script>
-    // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ДЛЯ КАЛЬКУЛЯТОРА ---
+    // --- ИЗМЕНЕНИЯ ТУТ: Стартовые переменные на 2 устройства ---
     let currentBasePrice = 200;
-    let currentMinDevices = 3;
-    let currentDevices = 3;
+    let currentMinDevices = 2;
+    let currentDevices = 2;
     let currentPlanId = 'buy_plan_1month';
 
     // Инициализация Telegram Web App
@@ -887,7 +887,6 @@
         const urlParams = new URLSearchParams(window.location.search);
         
         // --- ЗАЩИТА ОТ user_unknown ---
-        // Берем данные из Телеграма, но если их нет (ошибка кэша на ПК), берем из ссылки!
         const safeUserId = tg.initDataUnsafe?.user?.id || urlParams.get('id') || '000000000';
         const safeUserName = tg.initDataUnsafe?.user?.first_name 
             ? (tg.initDataUnsafe.user.first_name + (tg.initDataUnsafe.user.last_name ? ' ' + tg.initDataUnsafe.user.last_name : '')) 
@@ -921,7 +920,7 @@
         if (refEarnedDisplay) refEarnedDisplay.textContent = refEarned + ' ₽';
         if (refLinkInput) refLinkInput.value = refLink;
 
-        // Управление видимостью карточек (Активна/Неактивна)
+        // Управление видимостью карточек
         const statusBadge = document.getElementById('sub-status-badge');
         const progressText = document.getElementById('sub-progress-text');
         const progressContainer = document.getElementById('sub-progress-container');
@@ -1013,7 +1012,9 @@
     }
 
     function changeDevices(delta) {
+        // ИЗМЕНЕНИЯ ТУТ: Блокируем выход за нижнюю и ВЕРХНЮЮ (50) границы
         if (currentDevices + delta < currentMinDevices) return;
+        if (currentDevices + delta > 50) return;
         
         currentDevices += delta;
         updateCalculatorUI();
@@ -1026,15 +1027,17 @@
 
         document.getElementById('selected-price').textContent = totalPrice + ' ₽';
         document.getElementById('dev-count').textContent = currentDevices + ' устр.';
+        
+        // ИЗМЕНЕНИЯ ТУТ: Управляем прозрачностью кнопок
         document.getElementById('dev-minus').disabled = (currentDevices <= currentMinDevices);
+        const btnPlus = document.getElementById('dev-plus');
+        if(btnPlus) btnPlus.disabled = (currentDevices >= 50);
 
-        // payload для бота: buy_plan_1month_3
         document.getElementById('buy-btn').setAttribute('onclick', `buyPlan('${currentPlanId}_${currentDevices}')`);
     }
 
     function buyPlan(payload) {
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-        // Клик по кнопке "Оплатить" перенаправит в бота с командой /start buy_plan...
         tg.openTelegramLink('https://t.me/resonancerobot?start=' + payload);
     }
 
