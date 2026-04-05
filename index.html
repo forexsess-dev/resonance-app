@@ -375,7 +375,7 @@
             box-shadow: var(--danger-glow);
         }
 
-        /* Свитчер периодов */
+        /* Свитчер периодов и скидки */
         .period-switcher {
             display: flex;
             background: var(--overlay-bg);
@@ -399,6 +399,14 @@
             background: var(--accent-color);
             color: var(--bg-color);
             box-shadow: var(--glow);
+        }
+        .discount-label {
+            color: #00ff00;
+            font-size: 9px;
+            font-weight: 800;
+            display: block;
+            margin-top: -2px;
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.4);
         }
 
         /* Калькулятор цены и устройств */
@@ -683,10 +691,21 @@
                 <h3>покупка подписки</h3>
                 
                 <div class="period-switcher">
-                    <div class="period-option active" onclick="selectPeriod(1, 200, 'buy_plan_1month', this, 2)">1 мес</div>
-                    <div class="period-option" onclick="selectPeriod(3, 450, 'buy_plan_3months', this, 4)">3 мес</div>
-                    <div class="period-option" onclick="selectPeriod(6, 800, 'buy_plan_6months', this, 8)">6 мес</div>
-                    <div class="period-option" onclick="selectPeriod(12, 1450, 'buy_plan_1year', this, 10)">1 год</div>
+                    <div class="period-option active" onclick="selectPeriod(1, 200, 'buy_plan_1month', this, 2)">
+                        1 мес
+                    </div>
+                    <div class="period-option" onclick="selectPeriod(3, 450, 'buy_plan_3months', this, 4)">
+                        3 мес
+                        <span class="discount-label">-25%</span>
+                    </div>
+                    <div class="period-option" onclick="selectPeriod(6, 800, 'buy_plan_6months', this, 8)">
+                        6 мес
+                        <span class="discount-label">-33%</span>
+                    </div>
+                    <div class="period-option" onclick="selectPeriod(12, 1450, 'buy_plan_1year', this, 10)">
+                        1 год
+                        <span class="discount-label">-40%</span>
+                    </div>
                 </div>
                 
                 <div class="price-row">
@@ -831,7 +850,7 @@
 <h4>7. Разрешение споров</h4>7.1. Все споры, возникающие между Администрацией и Пользователем в связи с настоящим Соглашением, подлежат разрешению в порядке, предусмотренном действующим законодательством.
 
 <h4>8. Прочие условия</h4>8.1. Во всём остальном, что не предусмотрено настоящим Соглашением, стороны руководствуются действующим законодательством.
-8.2. Если какое-либо положение настоящего Соглашения будет признано недействительным, это не повлияет на действительность остальных положений.</div>
+8.2. If какое-либо положение настоящего Соглашения будет признано недействительным, это не повлияет на действительность остальных положений.</div>
     </div>
 
     <div class="tab-bar">
@@ -854,7 +873,7 @@
     </div>
 
 <script>
-    // --- ИЗМЕНЕНИЯ ТУТ: Стартовые переменные на 2 устройства ---
+    // --- Стартовые переменные на 2 устройства и 200р ---
     let currentBasePrice = 200;
     let currentMinDevices = 2;
     let currentDevices = 2;
@@ -1012,7 +1031,7 @@
     }
 
     function changeDevices(delta) {
-        // ИЗМЕНЕНИЯ ТУТ: Блокируем выход за нижнюю и ВЕРХНЮЮ (50) границы
+        // Блокируем выход за нижнюю и ВЕРХНЮЮ (50) границы
         if (currentDevices + delta < currentMinDevices) return;
         if (currentDevices + delta > 50) return;
         
@@ -1028,7 +1047,7 @@
         document.getElementById('selected-price').textContent = totalPrice + ' ₽';
         document.getElementById('dev-count').textContent = currentDevices + ' устр.';
         
-        // ИЗМЕНЕНИЯ ТУТ: Управляем прозрачностью кнопок
+        // Управляем прозрачностью кнопок
         document.getElementById('dev-minus').disabled = (currentDevices <= currentMinDevices);
         const btnPlus = document.getElementById('dev-plus');
         if(btnPlus) btnPlus.disabled = (currentDevices >= 50);
