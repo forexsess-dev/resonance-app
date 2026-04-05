@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* CSS Переменные для светлой палитры (White & Black) */
+        /* CSS Переменные по умолчанию (Светлая тема) */
         :root {
             --bg-color: #ffffff;
             --card-bg: #f9f9f9;
@@ -20,6 +20,33 @@
             --glow: 0 4px 12px rgba(0, 0, 0, 0.08);
             --glow-strong: 0 6px 16px rgba(0, 0, 0, 0.12);
             --glow-text: none;
+            --tab-bg: rgba(255, 255, 255, 0.95);
+            --overlay-bg: rgba(0, 0, 0, 0.03);
+            --danger-color: #ff4444;
+            --danger-bg: rgba(255, 68, 68, 0.1);
+            --danger-border: rgba(255, 68, 68, 0.3);
+            --danger-glow: none;
+            --disabled-color: rgba(0, 0, 0, 0.2);
+        }
+        
+        /* CSS Переменные для Темной темы */
+        body.dark-theme {
+            --bg-color: #000000;
+            --card-bg: #0a0a0a;
+            --accent-color: #ffffff;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --border-color: rgba(255, 255, 255, 0.2);
+            --glow: 0 0 15px rgba(255, 255, 255, 0.3);
+            --glow-strong: 0 0 25px rgba(255, 255, 255, 0.6);
+            --glow-text: 0 0 8px rgba(255, 255, 255, 0.8);
+            --tab-bg: rgba(0, 0, 0, 0.95);
+            --overlay-bg: rgba(255, 255, 255, 0.05);
+            --danger-color: #ff4444;
+            --danger-bg: rgba(255, 68, 68, 0.1);
+            --danger-border: rgba(255, 68, 68, 0.3);
+            --danger-glow: 0 0 15px rgba(255, 68, 68, 0.6);
+            --disabled-color: rgba(255, 255, 255, 0.2);
         }
         
         /* Сброс базовых стилей */
@@ -39,6 +66,7 @@
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         /* Верхний бар */
@@ -83,6 +111,10 @@
             letter-spacing: -0.5px;
         }
 
+        h2 {
+            text-shadow: var(--glow-text);
+        }
+
         .text-muted {
             color: var(--text-muted);
             font-size: 13px;
@@ -95,7 +127,7 @@
             padding: 20px;
             margin-bottom: 20px;
             border: 1px solid var(--border-color);
-            transition: box-shadow 0.3s ease, border-color 0.3s ease;
+            transition: box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
             position: relative;
         }
 
@@ -202,7 +234,7 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background-color: rgba(255, 255, 255, 0.95);
+            background-color: var(--tab-bg);
             backdrop-filter: blur(10px);
             display: flex;
             justify-content: space-around;
@@ -210,6 +242,7 @@
             border-top: 1px solid var(--border-color);
             z-index: 100;
             padding-bottom: calc(15px + env(safe-area-inset-bottom));
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
         .tab-item {
@@ -228,7 +261,7 @@
 
         .tab-item i {
             font-size: 18px;
-            transition: transform 0.2s;
+            transition: transform 0.2s, text-shadow 0.2s;
         }
 
         .tab-item.active {
@@ -238,6 +271,7 @@
         
         .tab-item.active i {
             transform: translateY(-2px);
+            text-shadow: var(--glow-text);
         }
 
         /* Специфичные компоненты */
@@ -250,6 +284,7 @@
             margin-bottom: 25px;
             text-transform: uppercase;
             letter-spacing: 1px;
+            text-shadow: var(--glow-text);
         }
 
         .header-logo i {
@@ -275,9 +310,9 @@
         }
 
         .status-inactive {
-            background: rgba(255, 68, 68, 0.1);
-            color: #ff4444;
-            border: 1px solid rgba(255, 68, 68, 0.3);
+            background: var(--danger-bg);
+            color: var(--danger-color);
+            border: 1px solid var(--danger-border);
         }
 
         .hidden {
@@ -290,28 +325,30 @@
 
         .progress-bar {
             height: 6px;
-            background: rgba(0, 0, 0, 0.05);
+            background: var(--overlay-bg);
             border-radius: 0px;
             overflow: hidden;
             margin-top: 8px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
         }
 
         .progress-fill {
             height: 100%;
             background: var(--accent-color);
             width: 15%;
-            transition: width 0.3s ease, background-color 0.3s ease;
+            transition: width 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: var(--glow);
         }
 
         .progress-fill.danger {
-            background: #ff4444;
+            background: var(--danger-color);
+            box-shadow: var(--danger-glow);
         }
 
         /* Свитчер периодов */
         .period-switcher {
             display: flex;
-            background: rgba(0, 0, 0, 0.03);
+            background: var(--overlay-bg);
             border-radius: 6px;
             padding: 4px;
             margin-bottom: 15px;
@@ -340,7 +377,7 @@
             justify-content: space-between;
             align-items: center;
             margin: 15px 0;
-            background: rgba(0, 0, 0, 0.02);
+            background: var(--overlay-bg);
             border: 1px solid var(--border-color);
             border-radius: 6px;
             padding: 10px 15px;
@@ -350,6 +387,7 @@
             font-size: 24px;
             font-weight: 800;
             margin: 0;
+            text-shadow: var(--glow-text);
         }
 
         .device-counter {
@@ -380,10 +418,11 @@
         }
 
         .btn-counter:disabled {
-            color: rgba(0, 0, 0, 0.2);
-            border-color: rgba(0, 0, 0, 0.1);
+            color: var(--disabled-color);
+            border-color: var(--border-color);
             cursor: not-allowed;
             background: transparent;
+            box-shadow: none;
         }
 
         .btn-counter:not(:disabled):hover {
@@ -409,6 +448,7 @@
         .tariff-features li i {
             color: var(--accent-color);
             font-size: 12px;
+            text-shadow: var(--glow-text);
         }
 
         /* Ссылки в профиле */
@@ -427,7 +467,7 @@
         }
 
         .profile-link:hover {
-            background: rgba(0, 0, 0, 0.02);
+            background: var(--overlay-bg);
             border-color: var(--accent-color);
             box-shadow: var(--glow);
         }
@@ -446,6 +486,7 @@
             font-size: 16px;
             width: 24px;
             text-align: center;
+            text-shadow: var(--glow-text);
         }
 
         /* Всплывающее уведомление (Toast) */
@@ -482,6 +523,7 @@
             vertical-align: middle;
             margin-left: 5px;
             animation: blink 1s step-end infinite;
+            box-shadow: var(--glow);
         }
 
         @keyframes blink {
@@ -660,11 +702,11 @@
             <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <div class="text-muted">приглашено</div>
-                    <div id="ref-count-display" style="font-size: 24px; font-weight: 800;">0</div>
+                    <div id="ref-count-display" style="font-size: 24px; font-weight: 800; text-shadow: var(--glow-text);">0</div>
                 </div>
                 <div style="text-align: right;">
                     <div class="text-muted">заработано</div>
-                    <div id="ref-earned-display" style="font-size: 24px; font-weight: 800; color: var(--accent-color);">0 ₽</div>
+                    <div id="ref-earned-display" style="font-size: 24px; font-weight: 800; color: var(--accent-color); text-shadow: var(--glow-text);">0 ₽</div>
                 </div>
             </div>
 
@@ -787,8 +829,25 @@
     document.addEventListener('DOMContentLoaded', () => {
         tg.ready();
         tg.expand();
-        tg.setHeaderColor('#ffffff');
-        tg.setBackgroundColor('#ffffff');
+
+        // --- ЛОГИКА АДАПТИВНОЙ ТЕМЫ ---
+        function applyTheme() {
+            if (tg.colorScheme === 'dark') {
+                document.body.classList.add('dark-theme');
+                tg.setHeaderColor('#000000');
+                tg.setBackgroundColor('#000000');
+            } else {
+                document.body.classList.remove('dark-theme');
+                tg.setHeaderColor('#ffffff');
+                tg.setBackgroundColor('#ffffff');
+            }
+        }
+
+        // Применяем тему при загрузке
+        applyTheme();
+        
+        // Слушаем изменения темы устройства "на лету"
+        tg.onEvent('themeChanged', applyTheme);
 
         const user = tg.initDataUnsafe?.user;
         if (user) {
@@ -938,7 +997,7 @@
 
     function buyPlan(payload) {
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-        // Отправляем команду боту с payload (тут осталась ссылка на твоего бота proxyzonavpn_bot)
+        // Отправляем команду боту с payload
         tg.openTelegramLink('https://t.me/resonancerobot?start=' + payload);
     }
 
